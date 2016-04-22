@@ -13,6 +13,7 @@
 #include <riptide_navigation/pidConfig.h>
 #include <boost/asio.hpp>
 #include <imu_3dm_gx4/FilterOutput.h>
+#include "tf/transform_datatypes.h"
 
 double p,i,d,im,dm, mag_z;
 bool first_reconfig= true;
@@ -44,7 +45,7 @@ void callback(const imu_3dm_gx4::FilterOutput::ConstPtr& current_orientation, co
   ros::Time time;
   ros::Duration time_diff;
   ros::Time last_time;
-  geometry_msgs::Vector3 orientation_des; 
+  geometry_msgs::Vector3 orientation_des, rpy; 
   geometry_msgs::Vector3Stamped accel_yaw;
   double currentz;
 
@@ -54,7 +55,13 @@ void callback(const imu_3dm_gx4::FilterOutput::ConstPtr& current_orientation, co
   orientation_des.z = orientation_set->vector.z;
 
 
-  currentz = current_orientation->orientation.z-mag_z;
+  tf::Quaternion q(current_orientation->orientation.x,current_orientation->orientation.y,current_orientation->orientation.z,current_orientation->orientation.w);
+  tf::Matrix3x3 m(q);
+  double roll,pitch,yaw;
+  
+  m.getRPY(roll,pitch,yaw);
+  ROS_INFO("roll: %f pitch: %f yaw: %f",roll,pitch,yaw);
+  currentz = yaw-mag_z;
 
   control_toolbox::Pid pid;
 

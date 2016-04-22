@@ -12,7 +12,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <riptide_navigation/pidConfig.h>
 #include <boost/asio.hpp>
-#include <sensor_msgs/MagneticField.h>
+#include "tf/transform_datatypes.h"
 #include <imu_3dm_gx4/FilterOutput.h>
 
 
@@ -46,14 +46,21 @@ void callback(const imu_3dm_gx4::FilterOutput::ConstPtr& current_orientation, co
   ros::Time time;
   ros::Duration time_diff;
   ros::Time last_time;
-  geometry_msgs::Vector3 orientation_des;
+  geometry_msgs::Vector3 orientation_des, rpy;
   geometry_msgs::Vector3Stamped accel_roll;
   double currentx;
   ros::Time timestamp = ros::Time::now();
   accel_roll.header.stamp = timestamp;
 
   orientation_des.x = orientation_set->vector.x;
-  currentx = current_orientation->orientation.x-mag_x;
+
+  tf::Quaternion q(current_orientation->orientation.x,current_orientation->orientation.y,current_orientation->orientation.z,current_orientation->orientation.w);
+  tf::Matrix3x3 m(q);
+  double roll,pitch,yaw;
+  
+  m.getRPY(roll,pitch,yaw);
+  ROS_INFO("roll: %f pitch: %f yaw: %f",roll,pitch,yaw);
+  currentx = roll-mag_x;
 
   control_toolbox::Pid pid;
 
