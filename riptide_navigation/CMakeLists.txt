@@ -25,6 +25,8 @@ add_executable(pid_pitch src/pid_pitch.cpp)
 add_executable(pid_yaw src/pid_yaw.cpp)
 
 add_dependencies(thrust_cal riptide_msgs_gencpp)
+add_dependencies(thrust_mapper riptide_msgs_gencpp)
+
 add_dependencies(pid_linear riptide_navigation_gencfg)
 add_dependencies(pid_roll riptide_navigation_gencfg)
 add_dependencies(pid_pitch riptide_navigation_gencfg)
@@ -32,6 +34,7 @@ add_dependencies(pid_yaw riptide_navigation_gencfg)
 
 target_link_libraries(thrust_cal ${catkin_LIBRARIES})
 target_link_libraries(thrust_mapper ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+
 target_link_libraries(fake_data ${catkin_LIBRARIES})
 target_link_libraries(fake_imu  ${catkin_LIBRARIES})
 target_link_libraries(pid_linear ${catkin_LIBRARIES})
