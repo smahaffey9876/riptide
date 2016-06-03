@@ -12,7 +12,9 @@
 #include <riptide_navigation/pidConfig.h>
 #include <boost/asio.hpp>
 #include "tf/transform_datatypes.h"
+#include "tf/LinearMath/Transform.h"
 #include <imu_3dm_gx4/FilterOutput.h>
+#include <tf/transform_listener.h>
 
 
 double p,i,d,im,dm,g,mag_x,mag_y,mag_z;
@@ -48,7 +50,7 @@ mag_z=config.mag_z;
 void callback(const sensor_msgs::Imu::ConstPtr& current_accel, const geometry_msgs::AccelStamped::ConstPtr& accel_set,const geometry_msgs::Vector3Stamped::ConstPtr& accel_roll,const geometry_msgs::Vector3Stamped::ConstPtr& accel_pitch,const geometry_msgs::Vector3Stamped::ConstPtr& accel_yaw,const imu_3dm_gx4::FilterOutput::ConstPtr& current_orientation)
 {
 
-  geometry_msgs::Vector3 accel_des, rpy;
+  geometry_msgs::Vector3 accel_des, rpy, gravity_cal;
   geometry_msgs::Accel accel_thrusters;
   ros::Time time;
   ros::Duration time_diff;
@@ -56,26 +58,33 @@ void callback(const sensor_msgs::Imu::ConstPtr& current_accel, const geometry_ms
   double currentx=0;
   double currenty=0;
   double currentz=0;
-  double currentangularx, currentangulary, currentangularz;
 
   accel_des.x = accel_set->accel.linear.x;
   accel_des.y = accel_set->accel.linear.y;
   accel_des.z = accel_set->accel.linear.z;
 
-  currentx = current_accel->linear_acceleration.x;
-  currenty = current_accel->linear_acceleration.y;
-  currentz = current_accel->linear_acceleration.z;
 
   tf::Quaternion q(current_orientation->orientation.x,current_orientation->orientation.y,current_orientation->orientation.z,current_orientation->orientation.w);
   tf::Matrix3x3 m(q);
-  double roll,pitch,yaw;
-  
-  m.getRPY(roll,pitch,yaw);
-  ROS_INFO("roll: %f pitch: %f yaw: %f",roll,pitch,yaw);
-  currentangularx = roll-mag_x;
-  currentangulary = roll-mag_y;
-  currentangularz = roll-mag_z;
+  double r,p,y,roll,pitch,yaw;
+  m.getRPY(r,p,y);
+  ROS_INFO("roll: %f pitch: %f yaw: %f",r,p,y);
+  roll = r-mag_x;
+  pitch = p-mag_y;
+  yaw = y-mag_z;
+  tf::Vector3 gravity_w, gravity_c;
+  gravity_w = tf::Vector3(0,0,-9.80665);
 
+  tf::TransformListener listener;  
+  tf::StampedTransform transform;
+  listener.lookupTransform("/world","/base_link",ros::Time(0),transform);
+  gravity_c=transform*gravity_w;
+  vector3TFToMsg(gravity_c, gravity_cal);
+
+  currentx = current_accel->linear_acceleration.x+gravity_cal.x;
+  currenty = current_accel->linear_acceleration.y+gravity_cal.y;
+  currentz = current_accel->linear_acceleration.z+gravity_cal.z;
+  ROS_INFO("currentx: %f currenty: %f currentz: %f",currentx,currenty,currentz);
 
   control_toolbox::Pid pid;
 
@@ -113,12 +122,12 @@ int main(int argc, char **argv) {
   node_priv.param<double>("im",im,.3);
   node_priv.param<double>("dm",dm,-.3);
 
-  message_filters::Subscriber<sensor_msgs::Imu> imu_sub(nh, "/imu/imu",1);
+  message_filters::Subscriber<sensor_msgs::Imu> imu_sub(nh, "/state/imu",1);
   message_filters::Subscriber<geometry_msgs::AccelStamped> accel_sub(nh, "accel_set_pt",1);
   message_filters::Subscriber<geometry_msgs::Vector3Stamped> roll_sub(nh,"accel_error_roll",1);
   message_filters::Subscriber<geometry_msgs::Vector3Stamped> pitch_sub(nh,"accel_error_pitch",1);
   message_filters::Subscriber<geometry_msgs::Vector3Stamped> yaw_sub(nh,"accel_error_yaw",1);
-  message_filters::Subscriber<imu_3dm_gx4::FilterOutput> imuang (nh, "/imu/filter",1);
+  message_filters::Subscriber<imu_3dm_gx4::FilterOutput> imuang (nh, "/state/filter",1);
 
   dynamic_reconfigure::Server<riptide_navigation::pidConfig> server;
   dynamic_reconfigure::Server<riptide_navigation::pidConfig>::CallbackType f;

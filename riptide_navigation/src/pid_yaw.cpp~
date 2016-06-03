@@ -61,7 +61,7 @@ void callback(const imu_3dm_gx4::FilterOutput::ConstPtr& current_orientation, co
   
   m.getRPY(roll,pitch,yaw);
   ROS_INFO("roll: %f pitch: %f yaw: %f",roll,pitch,yaw);
-  currentx = yaw-mag_z;
+  currentz = yaw-mag_z;
 
   control_toolbox::Pid pid;
 

@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   node_priv.param<double>("im",im,.3);
   node_priv.param<double>("dm",dm,-.3);
 
-  message_filters::Subscriber<imu_3dm_gx4::FilterOutput> imu_sub(nh, "/imu/filter",1);
+  message_filters::Subscriber<imu_3dm_gx4::FilterOutput> imu_sub(nh, "/state/filter",1);
   message_filters::Subscriber<geometry_msgs::Vector3Stamped> accel_sub(nh, "angular_set_pt",1);
 
   dynamic_reconfigure::Server<riptide_navigation::pidConfig> server;
