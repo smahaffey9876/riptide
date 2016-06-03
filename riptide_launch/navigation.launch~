@@ -1,5 +1,4 @@
 <launch>
-   <include file="$(find imu_3dm_gx4)/launch/imu.launch" />
    <node name="joy_node" pkg="joy" type="joy_node"/>
    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure"/>
    <node name="joy_accel_set" pkg="riptide_navigation" type="joy_accel_set"/>
