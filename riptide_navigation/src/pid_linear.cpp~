@@ -20,6 +20,8 @@
 double p,i,d,im,dm,g,mag_x,mag_y,mag_z;
 bool first_reconfig= true;
 ros::Publisher a_e;
+tf::TransformListener listener;  
+tf::StampedTransform transform;
 
 void dyn_callback(riptide_navigation::pidConfig &config, uint32_t level) {
   ROS_INFO("Reconfigure Request: %f %f %f %f %f %f %f %f %f",
@@ -74,10 +76,14 @@ void callback(const sensor_msgs::Imu::ConstPtr& current_accel, const geometry_ms
   yaw = y-mag_z;
   tf::Vector3 gravity_w, gravity_c;
   gravity_w = tf::Vector3(0,0,-9.80665);
+  try{
+  listener.lookupTransform("/odom","/base_link",ros::Time(0),transform);
+  }
 
-  tf::TransformListener listener;  
-  tf::StampedTransform transform;
-  listener.lookupTransform("/world","/base_link",ros::Time(0),transform);
+catch (tf::TransformException &ex){
+  ROS_ERROR ("%s", ex.what());
+  }
+
   gravity_c=transform*gravity_w;
   vector3TFToMsg(gravity_c, gravity_cal);
 

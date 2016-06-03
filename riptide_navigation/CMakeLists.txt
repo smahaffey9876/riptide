@@ -4,6 +4,7 @@ project(riptide_navigation)
 find_package(catkin REQUIRED COMPONENTS
   control_toolbox message_filters
   riptide_msgs sensor_msgs geometry_msgs
+  tf
 )
 find_package(Ceres REQUIRED)
 
