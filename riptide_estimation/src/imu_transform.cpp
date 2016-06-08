@@ -78,7 +78,7 @@ Orientation::Orientation()
   rotation_matrix = tf::Matrix3x3(1, 0, 0, 0, -1, 0, 0, 0, -1);
   rotation = tf::Transform(rotation_matrix);
 
-  tform.header.frame_id = "odom";
+  tform.header.frame_id = "map";
   tform.child_frame_id = "base_link";
 }
 

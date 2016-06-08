@@ -20,7 +20,6 @@
 double p,i,d,im,dm,g,mag_x,mag_y,mag_z;
 bool first_reconfig= true;
 ros::Publisher a_e;
-tf::TransformListener listener;  
 tf::StampedTransform transform;
 
 void dyn_callback(riptide_navigation::pidConfig &config, uint32_t level) {
@@ -74,22 +73,15 @@ void callback(const sensor_msgs::Imu::ConstPtr& current_accel, const geometry_ms
   roll = r-mag_x;
   pitch = p-mag_y;
   yaw = y-mag_z;
-  tf::Vector3 gravity_w, gravity_c;
-  gravity_w = tf::Vector3(0,0,-9.80665);
-  try{
-  listener.lookupTransform("/odom","/base_link",ros::Time(0),transform);
-  }
+  //tf::Vector3 gravity_w, gravity_c;
+  //gravity_w = tf::Vector3(0,0,-9.80665);
+  //gravity_c=transform*gravity_w;
+  
+  //vector3TFToMsg(gravity_c, gravity_cal);
 
-  catch (tf::TransformException &ex){
-  ROS_ERROR ("%s", ex.what());
-  }
-
-  gravity_c=transform*gravity_w;
-  vector3TFToMsg(gravity_c, gravity_cal);
-
-  currentx = current_accel->linear_acceleration.x+gravity_cal.x;
-  currenty = current_accel->linear_acceleration.y+gravity_cal.y;
-  currentz = current_accel->linear_acceleration.z+gravity_cal.z;
+  currentx = current_accel->linear_acceleration.x;
+  currenty = current_accel->linear_acceleration.y;
+  currentz = current_accel->linear_acceleration.z;
   ROS_INFO("currentx: %f currenty: %f currentz: %f",currentx,currenty,currentz);
 
   control_toolbox::Pid pid;
@@ -122,11 +114,11 @@ int main(int argc, char **argv) {
   ros::NodeHandle nh;
   ros::NodeHandle node_priv("~");
 
-  node_priv.param<double>("p",p,1.0);
-  node_priv.param<double>("i",i,1.0);
-  node_priv.param<double>("d",d,1.0);
-  node_priv.param<double>("im",im,.3);
-  node_priv.param<double>("dm",dm,-.3);
+  //node_priv.param<double>("p",p,1.0);
+  //node_priv.param<double>("i",i,1.0);
+  //node_priv.param<double>("d",d,1.0);
+  //node_priv.param<double>("im",im,.3);
+  //node_priv.param<double>("dm",dm,-.3);
 
   message_filters::Subscriber<sensor_msgs::Imu> imu_sub(nh, "/state/imu",1);
   message_filters::Subscriber<geometry_msgs::AccelStamped> accel_sub(nh, "accel_set_pt",1);
@@ -145,6 +137,21 @@ int main(int argc, char **argv) {
     sync.registerCallback(boost::bind(&callback,_1,_2,_3,_4,_5,_6));
 
     a_e = nh.advertise<geometry_msgs::Accel>("accel_error", 1);
-  ros::spin();
+  
+ // tf::TransformListener listener;  
+ 
+ // ros::Rate rate(20.0);
+ //while (nh.ok()){
+ // try{
+ // listener.lookupTransform("/map","/base_link",ros::Time(0),transform);
+ // ROS_INFO("Listener is Working");
+ // }
+
+ // catch (tf::TransformException &ex){
+ // ROS_ERROR ("%s", ex.what());
+ // }
+ 
+ ros::spin();
+ //rate.sleep();
 
 }

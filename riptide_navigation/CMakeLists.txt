@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Ceres REQUIRED)
 
-generate_dynamic_reconfigure_options(cfg/pid_orient.cfg cfg/pid.cfg)
+generate_dynamic_reconfigure_options(cfg/pid.cfg)
 
 catkin_package()
 
@@ -24,6 +24,7 @@ add_executable(joy_accel_set src/accel_set.cpp)
 add_executable(pid_roll src/pid_roll.cpp)
 add_executable(pid_pitch src/pid_pitch.cpp)
 add_executable(pid_yaw src/pid_yaw.cpp)
+add_executable(my_tf_listener src/tf_listener.cpp)
 
 add_dependencies(thrust_cal riptide_msgs_gencpp)
 add_dependencies(thrust_mapper riptide_msgs_gencpp)
@@ -43,3 +44,4 @@ target_link_libraries(joy_accel_set ${catkin_LIBRARIES})
 target_link_libraries(pid_roll ${catkin_LIBRARIES})
 target_link_libraries(pid_pitch ${catkin_LIBRARIES})
 target_link_libraries(pid_yaw ${catkin_LIBRARIES})
+target_link_libraries(my_tf_listener ${catkin_LIBRARIES})
