@@ -14,21 +14,13 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
 
-double px,ix,dx,imx,dmx,py,iy,dy,imy,dmy,pz,iz,dz,imz,dmz,pr,ir,dr,imr,dmr,pp,ip,dp,imp,dmp,py,iyaw,dyaw,imyaw,dmyaw;
+double px,ix,dx,imx,dmx,py,iy,dy,imy,dmy,pz,iz,dz,imz,dmz,pr,ir,dr,imr,dmr,pp,ip,dp,imp,dmp,pyaw,iyaw,dyaw,imyaw,dmyaw;
 bool first_reconfig= true;
 ros::Publisher p_e;
 tf::StampedTransform transform;
 
 void dyn_callback(riptide_navigation::pidConfig &config, uint32_t level) {
-  //ROS_INFO("Reconfigure Request: %f %f %f %f %f %f %f %f %f",
-  //         config.p, config.i,
-  //          config.d,
-  //          config.im,
-  //          config.dm,
-	//    config.g,
-        //  config.mag_x,
-	//  config.mag_y,
-	//  config.mag_z);
+
 if (first_reconfig)
 	{
 	first_reconfig=false;
@@ -71,7 +63,7 @@ dmyaw=config.dmyaw;
 void callback(const nav_msgs::Odometry::ConstPtr& current_pose, const geometry_msgs::PoseStamped::ConstPtr& pose_set)
 {
 
-  geometry_msgs::Vector3 position_des, position_current, orientation_des, orientation_current);
+  geometry_msgs::Vector3 position_des, position_current, orientation_des, orientation_current;
   geometry_msgs::PoseStamped pose_error;
   ros::Time time;
   ros::Duration time_diff;
@@ -80,32 +72,40 @@ void callback(const nav_msgs::Odometry::ConstPtr& current_pose, const geometry_m
   position_des.x = pose_set->pose.position.x;
   position_des.y = pose_set->pose.position.y;
   position_des.z = pose_set->pose.position.z;
-
+  ROS_INFO("set: %f",position_des.x);
   position_current.x = current_pose->pose.pose.position.x;
-  position_current.x = current_pose->pose.pose.position.y;
-  position_current.x = current_pose->pose.pose.position.y;
-  
-  control_toolbox::Pid pidx pidy pidz pidr pidp pidyaw;
+  position_current.y = current_pose->pose.pose.position.y;
+  position_current.z = current_pose->pose.pose.position.z;
+  ROS_INFO("current: %f",position_current.x);
+  control_toolbox::Pid pidx;
+//, pidy, pidz, pidr, pidp, pidyaw;
 
   pidx.initPid(px,ix,dx,imx,dmx);
-  pidy.initPid(py,iy,dy,imy,dmy);
-  pidz.initPid(pz,iz,dz,imz,dmz);
-  pidr.initPid(pr,ir,dr,imr,dmr);
-  pidp.initPid(pp,ip,dp,imp,dmp);
-  pidy.initPid(pyaw,iyaw,dyaw,imyaw,dmyaw);
+  //pidy.initPid(py,iy,dy,imy,dmy);
+  //pidz.initPid(pz,iz,dz,imz,dmz);
+  //pidr.initPid(pr,ir,dr,imr,dmr);
+  //pidp.initPid(pp,ip,dp,imp,dmp);
+  //pidy.initPid(pyaw,iyaw,dyaw,imyaw,dmyaw);
 
   time = ros::Time::now();
   time_diff = time-last_time;
   pose_error.header.stamp = time;
   
-  pose_error.pose.position.x=pidx.control_toolbox::Pid::computeCommand((pose_set->pose.position.x-current_pose->pose.pose.position.x),time_diff);
-  pose_error.pose.position.y=pidy.control_toolbox::Pid::computeCommand((pose_set->pose.position.y-current_pose->pose.pose.position.y),time_diff);
-  pose_error.pose.position.z=pidz.control_toolbox::Pid::computeCommand((pose_set->pose.position.z-current_pose->pose.pose.position.z),time_diff);
-
-  pose_error.pose.orientation.x=pidr.control_toolbox::Pid::computeCommand((pose_set->pose.position.x-current_pose->pose.pose.orientation.x),VELOCITYERROR,time_diff);
-  pose_error.pose.orientation.y=pidp.control_toolbox::Pid::computeCommand((pose_set->pose.position.y-current_pose->pose.pose.orientation.y),VELOCITYERROR,time_diff);
-  pose_error.pose.orientation.z=pidyaw.control_toolbox::Pid::computeCommand((pose_set->pose.position.z-current_pose->pose.pose.orientation.z),VELOCITYERROR,time_diff);
+  pose_error.pose.position.x=pidx.control_toolbox::Pid::computeCommand((position_des.x-position_current.x),time_diff);
+  //pose_error.pose.position.y=pidy.control_toolbox::Pid::computeCommand((pose_set->pose.position.y-current_pose->pose.pose.position.y),time_diff);
+  //pose_error.pose.position.z=pidz.control_toolbox::Pid::computeCommand((pose_set->pose.position.z-current_pose->pose.pose.position.z),time_diff);
+ROS_INFO("pid: %f",pose_error.pose.position.x);
+  //pose_error.pose.orientation.x=pidr.control_toolbox::Pid::computeCommand((pose_set->pose.position.x-current_pose->pose.pose.orientation.x),time_diff);
+  //pose_error.pose.orientation.y=pidp.control_toolbox::Pid::computeCommand((pose_set->pose.position.y-current_pose->pose.pose.orientation.y),time_diff);
+  //pose_error.pose.orientation.z=pidyaw.control_toolbox::Pid::computeCommand((pose_set->pose.position.z-current_pose->pose.pose.orientation.z),time_diff);
   
+  pidx.control_toolbox::Pid::getCurrentCmd();
+  //pidy.control_toolbox::Pid::getCurrentCmd();
+  //pidz.control_toolbox::Pid::getCurrentCmd();
+  //pidr.control_toolbox::Pid::getCurrentCmd();
+  //pidp.control_toolbox::Pid::getCurrentCmd();
+  //pidyaw.control_toolbox::Pid::getCurrentCmd();
+
   last_time = time;
 
   p_e.publish(pose_error);

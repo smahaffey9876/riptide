@@ -1,13 +1,12 @@
 <launch>
    <include file="$(find riptide_estimation)/launch/riptide_imu_transform.launch" />
+   <include file="$(find riptide_estimation)/launch/extended_kalman_filter.launch" />
    <node name="joy_node" pkg="joy" type="joy_node"/>
    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure"/>
-   <node name="joy_accel_set" pkg="riptide_navigation" type="joy_accel_set"/>
+   <node name="joy_set" pkg="riptide_navigation" type="joy_set"/>
    <node name="thrust_cal" pkg="riptide_navigation" type="thrust_cal"/>
    <node name="thrust_mapper" pkg="riptide_navigation" type="thrust_mapper"/>
-   <node name="pid_linear" pkg="riptide_navigation" type="pid_linear"/>
-   <node name="pid_roll" pkg="riptide_navigation" type="pid_roll"/>
-   <node name="pid_pitch" pkg="riptide_navigation" type="pid_pitch"/>
-   <node name="pid_yaw" pkg="riptide_navigation" type="pid_yaw"/>
+   <node name="position_controller" pkg="riptide_navigation" type="position_controller"/>
+
 
 </launch>

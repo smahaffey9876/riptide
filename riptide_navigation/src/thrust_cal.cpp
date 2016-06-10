@@ -94,5 +94,5 @@ int ThrustCal::calibrate(double raw_force, double fwd_cal, double rev_cal)
   {
     raw_force /= fwd_cal;
   }
-  return 1500 - int(raw_force*1.7452+raw_force*raw_force*.003113+raw_force*raw_force*raw_force*.004945);
+  return 1500 + int(-1*raw_force*1.7452+raw_force*raw_force*.003113+raw_force*raw_force*raw_force*.004945);
 }
