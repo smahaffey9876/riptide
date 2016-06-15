@@ -13,10 +13,11 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/AccelStamped.h>
 
-double px,ix,dx,imx,dmx,py,iy,dy,imy,dmy,pz,iz,dz,imz,dmz,pr,ir,dr,imr,dmr,pp,ip,dp,imp,dmp,pyaw,iyaw,dyaw,imyaw,dmyaw;
+double px,ix,dx,imx,dmx,py,iy,dy,imy,dmy,pz,iz,dz,imz,dmz;
 bool first_reconfig= true;
-ros::Publisher p_e;
+ros::Publisher la_e;
 tf::StampedTransform transform;
 
 void dyn_callback(riptide_navigation::pidConfig &config, uint32_t level) {
@@ -43,11 +44,11 @@ imz=config.imz;
 dmz=config.dmz;
 }
 
-void callback(const nav_msgs::Odometry::ConstPtr& current_pose, const geometry_msgs::PoseStamped::ConstPtr& pose_set)
+void callback(const nav_msgs::Odometry::ConstPtr& current_data, const geometry_msgs::PoseStamped::ConstPtr& pose_set, const geometry_msgs::TwistStamped::ConstPtr& twist_set)
 {
 
   geometry_msgs::Vector3 position_des, position_current, orientation_des, orientation_current;
-  geometry_msgs::PoseStamped pose_error;
+  geometry_msgs::AccelStamped lin_accel_error;
   ros::Time time;
   ros::Duration time_diff;
   ros::Time last_time;
@@ -58,22 +59,18 @@ void callback(const nav_msgs::Odometry::ConstPtr& current_pose, const geometry_m
   pidy.initPid(py,iy,dy,imy,dmy);
   pidz.initPid(pz,iz,dz,imz,dmz);
 
-
   time = ros::Time::now();
   time_diff = time-last_time;
-  pose_error.header.stamp = time;
+  lin_accel_error.header.stamp = time;
   
-  pose_error.pose.position.x=pidx.control_toolbox::Pid::computeCommand((pose_set->pose.position.x-current_pose->pose.pose.position.x),time_diff);
-  pose_error.pose.position.y=pidy.control_toolbox::Pid::computeCommand((pose_set->pose.position.y-current_pose->pose.pose.position.y),time_diff);
-  pose_error.pose.position.z=pidz.control_toolbox::Pid::computeCommand((pose_set->pose.position.z-current_pose->pose.pose.position.z),time_diff);
+  lin_accel_error.accel.linear.x=pidx.control_toolbox::Pid::computeCommand((pose_set->pose.position.x-current_data->pose.pose.position.x),(twist_set->twist.linear.x-current_data->twist.twist.linear.x),time_diff);
+  lin_accel_error.accel.linear.y=pidy.control_toolbox::Pid::computeCommand((pose_set->pose.position.y-current_data->pose.pose.position.y),(twist_set->twist.linear.y-current_data->twist.twist.linear.y),time_diff);
+  lin_accel_error.accel.linear.z=pidz.control_toolbox::Pid::computeCommand((pose_set->pose.position.z-current_data->pose.pose.position.z),(twist_set->twist.linear.z-current_data->twist.twist.linear.z),time_diff);
   
-  pose_error.pose.orientation.x = pose_set->pose.orientation.x;
-  pose_error.pose.orientation.y = pose_set->pose.orientation.y;
-  pose_error.pose.orientation.z = pose_set->pose.orientation.z;
-
   last_time = time;
 
-  p_e.publish(pose_error);
+  la_e.publish(lin_accel_error);
+  
 }
 
 int main(int argc, char **argv) {
@@ -84,17 +81,18 @@ int main(int argc, char **argv) {
 
   message_filters::Subscriber<nav_msgs::Odometry> kalmanout_sub(nh, "/odometry/filtered",1);
   message_filters::Subscriber<geometry_msgs::PoseStamped> poseset_sub(nh, "pose_set_pt",1);
+  message_filters::Subscriber<geometry_msgs::TwistStamped> twistset_sub(nh, "twist_set_pt",1);
  
   dynamic_reconfigure::Server<riptide_navigation::pidConfig> server;
   dynamic_reconfigure::Server<riptide_navigation::pidConfig>::CallbackType f;
   f = boost::bind(&dyn_callback, _1, _2);
   server.setCallback(f);
 
-  typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry,geometry_msgs::PoseStamped> MySyncPolicy;
-  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(100), kalmanout_sub, poseset_sub);  
-  sync.registerCallback(boost::bind(&callback,_1,_2));
+  typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry,geometry_msgs::PoseStamped,geometry_msgs::TwistStamped> MySyncPolicy;
+  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(100), kalmanout_sub, poseset_sub,twistset_sub);  
+  sync.registerCallback(boost::bind(&callback,_1,_2,_3));
 
-  p_e = nh.advertise<geometry_msgs::PoseStamped>("pose_error", 1);
+  la_e = nh.advertise<geometry_msgs::AccelStamped>("lin_accel_error",1);
   tf::TransformListener listener;  
  
   ros::Rate rate(20.0);

@@ -12,6 +12,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/AccelStamped.h>
+#include <geometry_msgs/Accel.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
 
@@ -44,10 +45,10 @@ imz=config.imz;
 dmz=config.dmz;
 }
 
-void callback(const nav_msgs::Odometry::ConstPtr& current_pose, const geometry_msgs::PoseStamped::ConstPtr& pose_set)
+void callback(const nav_msgs::Odometry::ConstPtr& current_data, const geometry_msgs::PoseStamped::ConstPtr& pose_set, const geometry_msgs::TwistStamped::ConstPtr& twist_set, const geometry_msgs::AccelStampedConstPtr& lin_accel_error)
 {
 
-  geometry_msgs::AccelStamped ang_accel_error;
+  geometry_msgs::Accel accel_error;
   ros::Time time;
   ros::Duration time_diff;
   ros::Time last_time;
@@ -60,15 +61,18 @@ void callback(const nav_msgs::Odometry::ConstPtr& current_pose, const geometry_m
   
   time = ros::Time::now();
   time_diff = time-last_time;
-  ang_accel_error.header.stamp = time;
-
-  ang_accel_error.accel.angular.x=pidx.control_toolbox::Pid::computeCommand((pose_set->pose.orientation.x-current_pose->pose.pose.orientation.x),time_diff);
-  ang_accel_error.accel.angular.y=pidy.control_toolbox::Pid::computeCommand((pose_set->pose.orientation.y-current_pose->pose.pose.orientation.y),time_diff);
-  ang_accel_error.accel.angular.z=pidz.control_toolbox::Pid::computeCommand((pose_set->pose.orientation.z-current_pose->pose.pose.orientation.z),time_diff);
+  
+  accel_error.angular.x=pidx.control_toolbox::Pid::computeCommand((pose_set->pose.orientation.x-current_data->pose.pose.orientation.x),(twist_set->twist.angular.x-current_data->twist.twist.angular.x),time_diff);
+  accel_error.angular.y=pidy.control_toolbox::Pid::computeCommand((pose_set->pose.orientation.y-current_data->pose.pose.orientation.y),(twist_set->twist.angular.y-current_data->twist.twist.angular.y),time_diff);
+  accel_error.angular.z=pidz.control_toolbox::Pid::computeCommand((pose_set->pose.orientation.z-current_data->pose.pose.orientation.z),(twist_set->twist.angular.z-current_data->twist.twist.angular.z),time_diff);
   
   last_time = time;
 
-  aa_e.publish(ang_accel_error);
+  accel_error.linear.x=lin_accel_error->accel.linear.x;
+  accel_error.linear.y=lin_accel_error->accel.linear.y;
+  accel_error.linear.z=lin_accel_error->accel.linear.z;
+
+  aa_e.publish(accel_error);
 }
 
 int main(int argc, char **argv) {
@@ -78,18 +82,21 @@ int main(int argc, char **argv) {
   ros::NodeHandle node_priv("~");
 
   message_filters::Subscriber<nav_msgs::Odometry> kalmanout_sub(nh, "/odometry/filtered",1);
-  message_filters::Subscriber<geometry_msgs::PoseStamped> poseset_sub(nh, "pose_error",1);
+  message_filters::Subscriber<geometry_msgs::PoseStamped> poseset_sub(nh, "pose_set_pt",1);
+  message_filters::Subscriber<geometry_msgs::TwistStamped> twistset_sub(nh, "twist_set_pt",1);
+  message_filters::Subscriber<geometry_msgs::AccelStamped> linae_sub(nh, "lin_accel_error",1);
  
+
   dynamic_reconfigure::Server<riptide_navigation::pidConfig> server;
   dynamic_reconfigure::Server<riptide_navigation::pidConfig>::CallbackType f;
   f = boost::bind(&dyn_callback, _1, _2);
   server.setCallback(f);
 
-  typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry,geometry_msgs::PoseStamped> MySyncPolicy;
-  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(100), kalmanout_sub, poseset_sub);  
-  sync.registerCallback(boost::bind(&callback,_1,_2));
+  typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry,geometry_msgs::PoseStamped,geometry_msgs::TwistStamped,geometry_msgs::AccelStamped> MySyncPolicy;
+  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(100), kalmanout_sub, poseset_sub,twistset_sub,linae_sub);  
+  sync.registerCallback(boost::bind(&callback,_1,_2,_3,_4));
 
-  aa_e = nh.advertise<geometry_msgs::AccelStamped>("ang_accel_error", 1);
+  aa_e = nh.advertise<geometry_msgs::Accel>("accel_error", 1);
   tf::TransformListener listener;  
  
   ros::Rate rate(20.0);
