@@ -1,0 +1,91 @@
+<?xml version='1.0'?>
+<sdf version="1.4">
+
+<joint name='orange1_to_gate' type="fixed">
+     <pose>0 -0.15 0 0 0 0</pose>
+            <child>orange1</child>
+            <parent>gate</parent>
+</joint>
+<joint name='orange2_to_gate' type="fixed">
+     <pose>0 -0.15 0 0 0 0</pose>
+            <child>orange2</child>
+            <parent>gate</parent>
+</joint>
+
+<model name="validation_gate">
+  <pose>0 0 0.5 0 0 0</pose>
+  <static>true</static>
+    <link name="gate">
+    <pose>0 0 0.5 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/validation_gate.stl</uri></mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh><uri>file://../meshes/validation_gate.stl</uri></mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name="orange1">
+    <pose>0 0 0.5 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/orange_gate.stl</uri></mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh><uri>file://../meshes/validation_gate.stl</uri></mesh>
+        </geometry>
+      </visual>
+    </link>
+    <pose>0 0 0.5 0 0 0</pose>
+    <link name="orange2">
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/orange_gate.stl</uri></mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh filename="../meshes/orange_gate.stl"/>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,138 @@
+<?xml version='1.0'?>
+<sdf version="1.4">
+
+<joint name='yellow1_to_gate' type="fixed">
+     <pose>0 -0.15 0 0 0 0</pose>
+            <child>yellow1</child>
+            <parent>gate</parent>
+</joint>
+<joint name='yellow2_to_gate' type="fixed">
+     <pose>0 -0.15 0 0 0 0</pose>
+            <child>yellow2</child>
+            <parent>gate</parent>
+</joint>
+<joint name='yellow3_to_gate' type="fixed">
+     <pose>0 -0.15 0 0 0 0</pose>
+            <child>yellow3</child>
+            <parent>gate</parent>
+</joint>
+
+
+<model name="navigate_channel">
+  <pose>0 0 0.5 0 0 0</pose>
+  <static>true</static>
+    <link name="channel">
+    <pose>0 0 0.5 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/channel.stl</uri></mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh><uri>file://../meshes/channel.stl</uri></mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name="yellow1">
+    <pose>0 0 0.5 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/yellow_side.stl</uri></mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh><uri>file://../meshes/yellow_side.stl</uri></mesh>
+        </geometry>
+      <material>
+          <ambient>1 .5 0 1</ambient>
+          <diffuse>1 .5 0 1</diffuse>
+          <specular>.1 .1 .1 .1 </specular>
+          <emissive>0 0 0 0</emissive>
+        </material>
+      </visual>
+    </link>
+    <pose>0 0 0.5 0 0 0</pose>
+    <link name="yellow2">
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/yellow_side.stl</uri></mesh>
+        </geometry>
+       <material>
+          <ambient>1 .5 0 1</ambient>
+          <diffuse>1 .5 0 1</diffuse>
+          <specular>.1 .1 .1 .1 </specular>
+          <emissive>0 0 0 0</emissive>
+        </material>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh><uri>file://../meshes/orange_gate.stl</uri></mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name="yellow3">
+      <inertial>
+        <mass>1.0</mass>
+        <inertia> 
+          <ixx>0.083</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>         
+          <iyy>0.083</iyy>       
+          <iyz>0.0</iyz>         
+          <izz>0.083</izz>       
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh><uri>file://../meshes/yellow_bottom.stl</uri></mesh>
+        </geometry>
+       <material>
+          <ambient>1 .5 0 1</ambient>
+          <diffuse>1 .5 0 1</diffuse>
+          <specular>.1 .1 .1 .1 </specular>
+          <emissive>0 0 0 0</emissive>
+        </material>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh><uri>file://../meshes/orange_gate.stl</uri></mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
