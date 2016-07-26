@@ -17,6 +17,7 @@
 
 tf::Matrix3x3 rotation_matrix;
 tf::Vector3 ang_v;
+tf::Transform rotation;
 
 // Thrust limits (N):
 double MIN_THRUST = -18.0;
@@ -37,7 +38,8 @@ double cmdHeave = 0.0;
 double cmdRoll = 0.0;
 double cmdPitch = 0.0;
 double cmdYaw = 0.0;
-
+tf::Vector3 cmdAccelBody;
+tf::Vector3 AccelVector;
 struct vector
 {
 		double x;
@@ -329,6 +331,7 @@ void Solver::state(const sensor_msgs::Imu::ConstPtr& msg)
 	tf::Quaternion tf;
   quaternionMsgToTF(msg->orientation, tf);
 	rotation_matrix.setRotation(tf.normalized());
+	rotation = tf::Transform(rotation_matrix);
 	vector3MsgToTF(msg->angular_velocity, ang_v);
 }
 
@@ -342,18 +345,23 @@ void Solver::callback(const geometry_msgs::Accel::ConstPtr& a)
 	cmdPitch = a->angular.y;
 	cmdYaw = a->angular.z;
 
+	AccelVector=tf::Vector3(cmdSurge,cmdSway,cmdHeave);
+
+	cmdAccelBody=rotation*AccelVector;
+
+
 	// These forced initial guesses don't make much of a difference.
 	// We currently experience a sort of gimbal lock w/ or w/o them.
-	surge_stbd_hi = 0.0;
-	surge_port_hi = 0.0;
-	surge_port_lo = 0.0;
-	surge_stbd_lo = 0.0;
-	sway_fwd = 0.0;
-	sway_aft = 0.0;
-	heave_port_aft = 0.0;
-	heave_stbd_aft = 0.0;
-	heave_stbd_fwd = 0.0;
-	heave_port_fwd = 0.0;
+	surge_stbd_hi = cmdAccelBody.x()/4;
+	surge_port_hi = cmdAccelBody.x()/4;
+	surge_port_lo = cmdAccelBody.x()/4;
+	surge_stbd_lo = cmdAccelBody.x()/4;
+	sway_fwd = cmdAccelBody.y()/2+cmdYaw/2;
+	sway_aft = cmdAccelBody.y()/2-cmdYaw/2;
+	heave_port_aft = cmdAccelBody.z()/4+cmdRoll/4+cmdPitch/4;
+	heave_stbd_aft = cmdAccelBody.z()/4-cmdRoll/4+cmdPitch/4;
+	heave_stbd_fwd = cmdAccelBody.z()/4-cmdRoll/4-cmdPitch/4;
+	heave_port_fwd = cmdAccelBody.z()/4+cmdRoll/4-cmdPitch/4;
 
 #ifdef debug
 	std::cout << "Initial surge_stbd_hi = " << surge_stbd_hi
